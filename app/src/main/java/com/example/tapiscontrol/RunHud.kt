@@ -25,7 +25,7 @@ data class HudData(
     val caption: String = "",
     val stepRemainingSec: Int? = null,   // tempo allo step successivo (o alla fine, se e' l'ultimo)
     val lastStep: Boolean = false,
-    val nextInfo: String? = null,        // velocita' e pendenza dello step successivo
+    val nextInfo: String? = null,        // velocita', pendenza e durata dello step successivo
     val elapsedSec: Int? = null,
     val totalRemainingSec: Int? = null,
 )
@@ -49,7 +49,7 @@ internal fun buildHud(
         caption = if (intervals) "${w.blockNameAt(p.stepIndex)} · step ${p.stepIndex + 1}/${p.stepCount}" else "",
         stepRemainingSec = if (intervals) p.stepRemainingSec else null,
         lastStep = intervals && next == null,
-        nextInfo = next?.let { "${fmt(it.speedKmh)} km/h · ${fmt(it.inclinePct)} %" },
+        nextInfo = next?.let { "${fmt(it.speedKmh)} km/h · ${fmt(it.inclinePct)} % · dura ${mmss(it.durationSec)}" },
         // tempo trascorso come lo conta il tapis (cosi' coincide con la console); se manca, quello dell'app
         elapsedSec = if (intervals) (live.elapsedSec ?: p.elapsedSec) else live.elapsedSec,
         totalRemainingSec = if (intervals) p.totalRemainingSec else null,

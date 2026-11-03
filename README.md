@@ -236,3 +236,8 @@ La compilazione parte da sola nella scheda Actions.
 - "Totale trascorso" mostra il tempo del tapis (quello della console), cosi' i due numeri coincidono.
 - Nella scheda In corso (verticale) compaiono "Prossimo step tra mm:ss (velocita' · pendenza)", o "Fine
   allenamento tra" nell'ultimo step, e "Totale trascorso · rimanente".
+
+## Novita' v0.35 - Durata del prossimo step
+
+- Accanto a "Prossimo step tra mm:ss" compare anche la durata dello step successivo
+  (es. "5,0 km/h · 3 % · dura 5:00"), sia a schermo intero sia nella scheda In corso.
