@@ -248,3 +248,11 @@ La compilazione parte da sola nella scheda Actions.
   sotto i dati dell'allenamento, e nella scheda In corso sotto il video ("rimangono mm:ss su mm:ss").
 - E' il tempo del video, che scorre piu' veloce o piu' piano in base alla velocita' del tapis rispetto
   alla velocita' di riferimento; arrivato alla fine il video riparte da capo.
+
+## Novita' v0.37 - Il video segue i salti di step
+
+- Quando si passa a un altro step (pulsanti precedente/successivo, o elenco step) il video avanza o torna
+  indietro dello stesso tempo di cui salta l'allenamento (video locali e YouTube; non l'animazione).
+  Esempio: mancano 40 s alla fine dello step e premi "successivo" -> il video avanza di 40 s.
+- Il nome dello step in corso (il nome del blocco) compare insieme al tempo residuo: nella scheda In corso
+  ("Intervalli · Step 3/12 · restano 0:45") e a schermo intero.
