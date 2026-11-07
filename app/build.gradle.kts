@@ -12,8 +12,8 @@ android {
         applicationId = "com.example.tapiscontrol"
         minSdk = 26
         targetSdk = 35
-        versionCode = 35
-        versionName = "0.35"
+        versionCode = 36
+        versionName = "0.36"
     }
 
     signingConfigs {
