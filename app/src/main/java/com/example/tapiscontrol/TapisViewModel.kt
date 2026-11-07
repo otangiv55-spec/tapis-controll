@@ -76,7 +76,9 @@ class TapisViewModel(app: Application) : AndroidViewModel(app) {
     val routeMessage = MutableStateFlow("")
     val videoPos = MutableStateFlow(0.0)            // posizione del video (s), per la visualizzazione
     @Volatile var videoPosSec = 0.0
+    val videoDur = MutableStateFlow(0.0)            // durata del video (s), per la visualizzazione
     @Volatile var videoDurSec = 0.0                 // durata del video (0 = sconosciuta), per il giro virtuale
+        set(v) { field = v; videoDur.value = v }
     @Volatile private var lastPlayerReportMs = 0L   // ultima volta che il lettore ha riportato la posizione
     private var routeJob: Job? = null
     private var lastProfileIncline: Double? = null

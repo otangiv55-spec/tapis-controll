@@ -571,7 +571,9 @@ fun RunTab(vm: TapisViewModel) {
             val playing = running && !paused && speed >= 0.5
             val ref = w.video.refSpeedKmh
             val rate = if (speed >= 0.5) ((speed / ref) * 20).roundToInt() / 20f else 1f
-            val hud = buildHud(w, p, live, isRoute, remember(w) { w.flatSteps() })
+            val vPos by vm.videoPos.collectAsStateWithLifecycle()
+            val vDur by vm.videoDur.collectAsStateWithLifecycle()
+            val hud = buildHud(w, p, live, isRoute, remember(w) { w.flatSteps() }, vPos, vDur)
 
             if (w.video.type == VideoType.ANIMATION) {
                 AnimatedRoute(
@@ -619,6 +621,13 @@ fun RunTab(vm: TapisViewModel) {
                     }
                     VideoType.NONE, VideoType.ANIMATION -> {}
                 }
+            }
+
+            hud.videoRemainingSec?.let {
+                Text(
+                    "Video: rimangono ${mmss(it)} su ${mmss(vDur.roundToInt())}",
+                    style = MaterialTheme.typography.titleSmall,
+                )
             }
 
             if (w.video.active) {

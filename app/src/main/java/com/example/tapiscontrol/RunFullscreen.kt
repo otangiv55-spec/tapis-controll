@@ -70,7 +70,9 @@ fun RunFullscreen(vm: TapisViewModel, w: Workout, onExit: () -> Unit) {
     val ref = w.video.refSpeedKmh
     val rate = if (speed >= 0.5) ((speed / ref) * 20).roundToInt() / 20f else 1f
     val steps = remember(w) { w.flatSteps() }
-    val hud = buildHud(w, p, live, isRoute, steps)
+    val vPos by vm.videoPos.collectAsStateWithLifecycle()
+    val vDur by vm.videoDur.collectAsStateWithLifecycle()
+    val hud = buildHud(w, p, live, isRoute, steps, vPos, vDur)
     val message = if (isRoute) routeMsg else p.message
 
     Box(Modifier.fillMaxSize().background(Color.Black)) {

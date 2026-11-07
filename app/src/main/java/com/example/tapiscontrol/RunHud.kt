@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.roundToInt
 
 /** Dati mostrati sopra l'animazione o il video (tutti facoltativi tranne velocita' e pendenza). */
 data class HudData(
@@ -28,6 +29,7 @@ data class HudData(
     val nextInfo: String? = null,        // velocita', pendenza e durata dello step successivo
     val elapsedSec: Int? = null,
     val totalRemainingSec: Int? = null,
+    val videoRemainingSec: Int? = null,  // tempo che manca alla fine del video (solo video locali/YouTube)
 )
 
 /** Costruisce i dati del pannello dai valori live del tapis roulant e dall'avanzamento dell'allenamento. */
@@ -37,6 +39,8 @@ internal fun buildHud(
     live: LiveData,
     isRoute: Boolean,
     steps: List<Step>,
+    videoPosSec: Double = 0.0,
+    videoDurSec: Double = 0.0,
 ): HudData {
     val intervals = !isRoute && p.running && p.stepIndex >= 0
     val next = if (intervals) steps.getOrNull(p.stepIndex + 1) else null
@@ -53,6 +57,8 @@ internal fun buildHud(
         // tempo trascorso come lo conta il tapis (cosi' coincide con la console); se manca, quello dell'app
         elapsedSec = if (intervals) (live.elapsedSec ?: p.elapsedSec) else live.elapsedSec,
         totalRemainingSec = if (intervals) p.totalRemainingSec else null,
+        videoRemainingSec = if (w.video.active && w.video.type != VideoType.ANIMATION && videoDurSec > 1.0)
+            (videoDurSec - videoPosSec).roundToInt().coerceAtLeast(0) else null,
     )
 }
 
@@ -104,6 +110,7 @@ fun RunHud(d: HudData, modifier: Modifier = Modifier, scale: Float = 1f, showDis
                 }
                 HudChip(parts.joinToString(" · "), s)
             }
+            d.videoRemainingSec?.let { HudChip("Video: rimangono ${mmss(it)}", s) }
         }
     }
 }
