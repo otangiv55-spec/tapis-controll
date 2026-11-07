@@ -241,3 +241,10 @@ La compilazione parte da sola nella scheda Actions.
 
 - Accanto a "Prossimo step tra mm:ss" compare anche la durata dello step successivo
   (es. "5,0 km/h · 3 % · dura 5:00"), sia a schermo intero sia nella scheda In corso.
+
+## Novita' v0.36 - Tempo rimanente del video
+
+- Con i video locali e YouTube compare "Video: rimangono mm:ss" (in minuti, non in Mb): a schermo intero
+  sotto i dati dell'allenamento, e nella scheda In corso sotto il video ("rimangono mm:ss su mm:ss").
+- E' il tempo del video, che scorre piu' veloce o piu' piano in base alla velocita' del tapis rispetto
+  alla velocita' di riferimento; arrivato alla fine il video riparte da capo.
