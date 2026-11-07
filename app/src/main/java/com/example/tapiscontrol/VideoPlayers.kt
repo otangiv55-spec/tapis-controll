@@ -30,6 +30,9 @@ import androidx.media3.exoplayer.ExoPlayer
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
+/** Richiesta di spostare il video: ogni richiesta nuova ha un id diverso. */
+data class SeekReq(val id: Int = 0, val sec: Double = 0.0)
+
 /** Video su file del telefono: la velocita' di riproduzione segue quella del tapis roulant (continua). */
 @Composable
 fun LocalVideo(
@@ -40,6 +43,7 @@ fun LocalVideo(
     startSec: Double = 0.0,
     onDuration: (Double) -> Unit = {},
     onPosition: (Double) -> Unit = {},
+    seek: SeekReq = SeekReq(),
 ) {
     val ctx = LocalContext.current
     val posCb by rememberUpdatedState(onPosition)
@@ -70,6 +74,10 @@ fun LocalVideo(
     }
     LaunchedEffect(exo, rate) { exo.playbackParameters = PlaybackParameters(rate.coerceIn(0.25f, 3f)) }
     LaunchedEffect(exo, playing) { exo.playWhenReady = playing }
+    val seekId0 = remember(exo) { seek.id }   // le richieste vecchie non si ripetono quando il lettore viene ricreato
+    LaunchedEffect(exo, seek.id) {
+        if (seek.id != seekId0) exo.seekTo((seek.sec * 1000).toLong().coerceAtLeast(0L))
+    }
     LaunchedEffect(exo) {
         while (true) {
             posCb(exo.currentPosition / 1000.0)
@@ -134,6 +142,7 @@ setInterval(function() {
     if (player.getDuration) Android.dur(String(player.getDuration()));
   }
 }, 500);
+function seekToSec(s) { if (ready) player.seekTo(s, true); }
 function setRate(r) { wantRate = r; if (ready) player.setPlaybackRate(r); }
 function setPlaying(p) { wantPlaying = p; if (ready) { if (p) player.playVideo(); else player.pauseVideo(); } }
 </script></body></html>
@@ -151,6 +160,7 @@ fun YouTubeVideo(
     startSec: Double = 0.0,
     onDuration: (Double) -> Unit = {},
     onPosition: (Double) -> Unit = {},
+    seek: SeekReq = SeekReq(),
 ) {
     val ctx = LocalContext.current
     val posCb by rememberUpdatedState(onPosition)
@@ -175,6 +185,10 @@ fun YouTubeVideo(
     DisposableEffect(wv) { onDispose { wv.destroy() } }
     LaunchedEffect(wv, rate, loaded) { if (loaded) wv.evaluateJavascript("setRate($rate)", null) }
     LaunchedEffect(wv, playing, loaded) { if (loaded) wv.evaluateJavascript("setPlaying($playing)", null) }
+    val seekId0 = remember(wv) { seek.id }
+    LaunchedEffect(wv, seek.id, loaded) {
+        if (loaded && seek.id != seekId0) wv.evaluateJavascript("seekToSec(${seek.sec})", null)
+    }
 
     AndroidView(factory = { wv }, modifier = modifier)
 }

@@ -76,6 +76,7 @@ class TapisViewModel(app: Application) : AndroidViewModel(app) {
     val routeMessage = MutableStateFlow("")
     val videoPos = MutableStateFlow(0.0)            // posizione del video (s), per la visualizzazione
     @Volatile var videoPosSec = 0.0
+    val videoSeek = MutableStateFlow(SeekReq())      // richiesta di spostare il video (salto di step)
     val videoDur = MutableStateFlow(0.0)            // durata del video (s), per la visualizzazione
     @Volatile var videoDurSec = 0.0                 // durata del video (0 = sconosciuta), per il giro virtuale
         set(v) { field = v; videoDur.value = v }
@@ -202,7 +203,32 @@ class TapisViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Durante l'allenamento salta subito allo step; da fermo sceglie lo step di partenza. */
     fun selectStep(index: Int) {
-        if (runner.progress.value.running) runner.jumpTo(index) else startStep.value = index
+        val p = runner.progress.value
+        if (p.running) {
+            seekVideoForStepJump(p, index)
+            runner.jumpTo(index)
+        } else {
+            startStep.value = index
+        }
+    }
+
+    /** Il video avanza (o torna indietro) dello stesso tempo di cui l'allenamento salta in avanti (o indietro). */
+    private fun seekVideoForStepJump(p: WorkoutRunner.Progress, target: Int) {
+        val w = workouts.value.firstOrNull { it.id == activeId.value } ?: return
+        if (!w.video.active || w.video.type == VideoType.ANIMATION) return
+        val steps = w.flatSteps()
+        if (p.stepIndex !in steps.indices || target !in steps.indices) return
+        val now = steps.take(p.stepIndex).sumOf { it.durationSec } +
+            (steps[p.stepIndex].durationSec - p.stepRemainingSec)
+        val tgt = steps.take(target).sumOf { it.durationSec }
+        val delta = tgt - now
+        if (delta == 0) return
+        var pos = videoPosSec + delta
+        val dur = videoDurSec
+        pos = if (dur > 1.0) pos.coerceIn(0.0, dur - 1.0) else pos.coerceAtLeast(0.0)
+        videoPosSec = pos
+        videoPos.value = pos
+        videoSeek.value = SeekReq(videoSeek.value.id + 1, pos)
     }
 
     fun startWorkout(id: Long, fromStep: Int = 0) {

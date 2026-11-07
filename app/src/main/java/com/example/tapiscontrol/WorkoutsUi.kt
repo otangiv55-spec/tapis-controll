@@ -572,6 +572,7 @@ fun RunTab(vm: TapisViewModel) {
             val ref = w.video.refSpeedKmh
             val rate = if (speed >= 0.5) ((speed / ref) * 20).roundToInt() / 20f else 1f
             val vPos by vm.videoPos.collectAsStateWithLifecycle()
+            val seek by vm.videoSeek.collectAsStateWithLifecycle()
             val vDur by vm.videoDur.collectAsStateWithLifecycle()
             val hud = buildHud(w, p, live, isRoute, remember(w) { w.flatSteps() }, vPos, vDur)
 
@@ -598,6 +599,7 @@ fun RunTab(vm: TapisViewModel) {
                             startSec = vm.videoPosSec,
                             onDuration = { vm.videoDurSec = it },
                             onPosition = { vm.onVideoPosition(it) },
+                    seek = seek,
                         )
                     VideoType.YOUTUBE -> {
                         val id = youtubeId(w.video.source)
@@ -613,6 +615,7 @@ fun RunTab(vm: TapisViewModel) {
                                 startSec = vm.videoPosSec,
                                 onDuration = { vm.videoDurSec = it },
                                 onPosition = { vm.onVideoPosition(it) },
+                    seek = seek,
                             )
                         }
                         ytError?.let {
@@ -649,7 +652,12 @@ fun RunTab(vm: TapisViewModel) {
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         if (p.running && p.stepIndex >= 0) {
-                            Text("Step ${p.stepIndex + 1}/${p.stepCount} · restano ${mmss(p.stepRemainingSec)}")
+                            val stepName = w.blockNameAt(p.stepIndex)
+                            Text(
+                                (if (stepName.isNotEmpty()) "$stepName · " else "") +
+                                    "Step ${p.stepIndex + 1}/${p.stepCount} · restano ${mmss(p.stepRemainingSec)}",
+                                style = MaterialTheme.typography.titleMedium,
+                            )
                             val nextTxt = if (hud.lastStep || hud.nextInfo == null)
                                 "Fine allenamento tra ${mmss(p.stepRemainingSec)}"
                             else

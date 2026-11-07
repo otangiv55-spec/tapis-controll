@@ -50,7 +50,9 @@ internal fun buildHud(
         distanceM = live.distanceM,
         kcal = live.kcal,
         heartRate = live.heartRate?.takeIf { it > 0 },
-        caption = if (intervals) "${w.blockNameAt(p.stepIndex)} · step ${p.stepIndex + 1}/${p.stepCount}" else "",
+        caption = if (intervals)
+            "${w.blockNameAt(p.stepIndex)} · step ${p.stepIndex + 1}/${p.stepCount} · restano ${mmss(p.stepRemainingSec)}"
+        else "",
         stepRemainingSec = if (intervals) p.stepRemainingSec else null,
         lastStep = intervals && next == null,
         nextInfo = next?.let { "${fmt(it.speedKmh)} km/h · ${fmt(it.inclinePct)} % · dura ${mmss(it.durationSec)}" },

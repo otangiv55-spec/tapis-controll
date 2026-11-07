@@ -71,6 +71,7 @@ fun RunFullscreen(vm: TapisViewModel, w: Workout, onExit: () -> Unit) {
     val rate = if (speed >= 0.5) ((speed / ref) * 20).roundToInt() / 20f else 1f
     val steps = remember(w) { w.flatSteps() }
     val vPos by vm.videoPos.collectAsStateWithLifecycle()
+    val seek by vm.videoSeek.collectAsStateWithLifecycle()
     val vDur by vm.videoDur.collectAsStateWithLifecycle()
     val hud = buildHud(w, p, live, isRoute, steps, vPos, vDur)
     val message = if (isRoute) routeMsg else p.message
@@ -96,6 +97,7 @@ fun RunFullscreen(vm: TapisViewModel, w: Workout, onExit: () -> Unit) {
                     startSec = vm.videoPosSec,
                     onDuration = { vm.videoDurSec = it },
                     onPosition = { vm.onVideoPosition(it) },
+                    seek = seek,
                 )
                 VideoType.YOUTUBE -> {
                     val id = youtubeId(w.video.source)
@@ -109,6 +111,7 @@ fun RunFullscreen(vm: TapisViewModel, w: Workout, onExit: () -> Unit) {
                             startSec = vm.videoPosSec,
                             onDuration = { vm.videoDurSec = it },
                             onPosition = { vm.onVideoPosition(it) },
+                    seek = seek,
                         )
                     }
                 }
