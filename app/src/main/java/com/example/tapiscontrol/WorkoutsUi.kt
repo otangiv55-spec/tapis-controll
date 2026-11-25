@@ -655,8 +655,6 @@ fun RunTab(vm: TapisViewModel) {
 
             LiveCard(live)
 
-            if (running) HoldSwitch(vm)
-
             if (isRoute) {
                 RouteControls(vm, w, connected)
             } else {

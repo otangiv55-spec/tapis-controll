@@ -96,22 +96,3 @@ fun MusicCard(vm: TapisViewModel) {
         }
     }
 }
-
-/** Interruttore "mantieni costanti" (blocca le variazioni di velocita' e pendenza dell'allenamento). */
-@Composable
-fun HoldSwitch(vm: TapisViewModel) {
-    val hold by vm.holdConstant.collectAsStateWithLifecycle()
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Switch(checked = hold, onCheckedChange = { vm.setHold(it) })
-            Text("Mantieni costanti velocità e pendenza", style = MaterialTheme.typography.titleSmall)
-        }
-        if (hold) {
-            Text(
-                "Le variazioni previste dall'allenamento (o dal profilo del video) sono sospese: restano i valori " +
-                    "attuali, che puoi comunque correggere a mano. Spegni per riprendere con una transizione graduale.",
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
-    }
-}

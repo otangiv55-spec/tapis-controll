@@ -112,25 +112,36 @@ fun AlertSettings(vm: TapisViewModel) {
 /** Durate (s) della transizione graduale tra uno step e il successivo. */
 val RAMP_OPTIONS = listOf(6, 10, 15, 20, 30)
 
-/** Scelta della durata della transizione graduale di velocita' e pendenza (scheda In corso). */
+/** Interruttore e durata della transizione graduale di velocita' e pendenza (scheda In corso). */
 @Composable
 fun RampSettings(vm: TapisViewModel) {
+    val on by vm.rampOn.collectAsStateWithLifecycle()
     val ramp by vm.rampSec.collectAsStateWithLifecycle()
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text("Transizione graduale tra gli step", style = MaterialTheme.typography.titleSmall)
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            RAMP_OPTIONS.forEach { s ->
-                if (s == ramp) {
-                    Button(onClick = { vm.setRamp(s) }) { Text("$s s") }
-                } else {
-                    OutlinedButton(onClick = { vm.setRamp(s) }) { Text("$s s") }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Switch(checked = on, onCheckedChange = { vm.setRampOn(it) })
+            Text("Transizione graduale tra gli step", style = MaterialTheme.typography.titleSmall)
+        }
+        if (on) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                RAMP_OPTIONS.forEach { s ->
+                    if (s == ramp) {
+                        Button(onClick = { vm.setRamp(s) }) { Text("$s s") }
+                    } else {
+                        OutlinedButton(onClick = { vm.setRamp(s) }) { Text("$s s") }
+                    }
                 }
             }
+            Text(
+                "Velocita' e pendenza cambiano un po' alla volta nei primi secondi di ogni step " +
+                    "(al massimo meta' dello step). La pendenza del tapis sale di 1 % per volta.",
+                style = MaterialTheme.typography.bodySmall,
+            )
+        } else {
+            Text(
+                "Spenta: a ogni cambio di step velocita' e pendenza passano subito ai nuovi valori.",
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
-        Text(
-            "Velocita' e pendenza cambiano un po' alla volta nei primi secondi di ogni step " +
-                "(al massimo meta' dello step). La pendenza del tapis sale di 1 % per volta.",
-            style = MaterialTheme.typography.bodySmall,
-        )
     }
 }

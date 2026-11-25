@@ -233,6 +233,8 @@ class WorkoutStore(ctx: Context) {
     fun loadVideoMuted(): Boolean = prefs.getBoolean("vmuted", false)
     fun saveVideoMuted(v: Boolean) = prefs.edit().putBoolean("vmuted", v).apply()
 
+    fun loadRampOn(): Boolean = prefs.getBoolean("rampon", true)
+    fun saveRampOn(v: Boolean) = prefs.edit().putBoolean("rampon", v).apply()
     fun loadRamp(): Int = prefs.getInt("ramp", 15)
     fun saveRamp(v: Int) = prefs.edit().putInt("ramp", v).apply()
 
@@ -284,9 +286,6 @@ class WorkoutRunner(private val ble: TreadmillBle, private val scope: CoroutineS
     /** Durata (s) della rampa all'inizio di ogni step (tranne il primo). */
     @Volatile var rampSec = 15
 
-    /** true = i valori dello step in corso restano fissi anche quando cambia lo step (il tempo scorre lo stesso). */
-    @Volatile var hold = false
-
     private var job: Job? = null
     @Volatile private var paused = false
     @Volatile private var pausedExternally = false   // true = pausa rilevata dal nastro fermo (console/chiave), non dal pulsante
@@ -323,7 +322,6 @@ class WorkoutRunner(private val ble: TreadmillBle, private val scope: CoroutineS
         paused = false
         pausedExternally = false
         jumpTarget = null
-        hold = false
         speedOffset = 0.0
         inclineOffset = 0.0
         speedOffsetFlow.value = 0.0
@@ -373,8 +371,6 @@ class WorkoutRunner(private val ble: TreadmillBle, private val scope: CoroutineS
         var stoppedTicks = 0   // secondi consecutivi col nastro fermo mentre l'allenamento e' in corso
         var idx = startIndex
         var firstStep = true   // il primo step applicato parte subito, senza rampa
-        var heldSp: Double? = null    // valori dello step bloccati con "mantieni costanti"
-        var heldInc: Double? = null
         while (idx < steps.size) {
             val step = steps[idx]
             var tgtSpeed = prevSpeed
@@ -382,30 +378,14 @@ class WorkoutRunner(private val ble: TreadmillBle, private val scope: CoroutineS
             var jumpedTo: Int? = null
 
             var t = 0
-            var rampT0 = 0   // istante (nello step) da cui parte la transizione graduale
             while (t < step.durationSec) {
                 val j0 = jumpTarget
                 if (j0 != null) {
                     jumpTarget = null
                     if (j0 in steps.indices) { jumpedTo = j0; break }
                 }
-                val wasHeld = heldSp != null
-                if (hold) {
-                    if (heldSp == null) { heldSp = step.speedKmh; heldInc = step.inclinePct }
-                } else {
-                    heldSp = null
-                    heldInc = null
-                }
-                if (wasHeld && !hold) {
-                    // fine del blocco: si torna ai valori dello step con una transizione graduale da quelli attuali
-                    prevSpeed = sentSpeed ?: prevSpeed
-                    prevInc = sentInc ?: prevInc
-                    rampT0 = t
-                }
-                val baseSp = heldSp ?: step.speedKmh
-                val baseInc = heldInc ?: step.inclinePct
-                tgtSpeed = round1((baseSp + speedOffset).coerceIn(1.0, maxSpeed))
-                tgtInc = roundHalf((baseInc + inclineOffset).coerceIn(0.0, maxIncline))
+                tgtSpeed = round1((step.speedKmh + speedOffset).coerceIn(1.0, maxSpeed))
+                tgtInc = roundHalf((step.inclinePct + inclineOffset).coerceIn(0.0, maxIncline))
                 if (!ble.connected.value) {
                     progress.value = Progress(
                         message = "Connessione persa! Il tapis roulant mantiene l'ultima velocita': " +
@@ -462,7 +442,7 @@ class WorkoutRunner(private val ble: TreadmillBle, private val scope: CoroutineS
                 // la rampa non supera meta' della durata dello step, cosi' lo step resta in parte a regime
                 val ramp = min(rampSec, max(1, step.durationSec / 2))
                 val f = if (firstStep || rampSec <= 0) 1.0
-                else ((t - rampT0 + 1).toDouble() / ramp).coerceAtMost(1.0)
+                else ((t + 1).toDouble() / ramp).coerceAtMost(1.0)
                 val sp = round1(prevSpeed + (tgtSpeed - prevSpeed) * f)
                 val inc = roundHalf(prevInc + (tgtInc - prevInc) * f)
 

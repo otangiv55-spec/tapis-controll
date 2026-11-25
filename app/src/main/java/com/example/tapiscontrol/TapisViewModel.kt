@@ -38,13 +38,12 @@ class TapisViewModel(app: Application) : AndroidViewModel(app) {
     val videoMuted = MutableStateFlow(store.loadVideoMuted())
     fun setVideoMuted(v: Boolean) { videoMuted.value = v; store.saveVideoMuted(v) }
 
-    // "mantieni costanti": sospende le variazioni di velocita' e pendenza previste da allenamento o profilo
-    val holdConstant = MutableStateFlow(false)
-    fun setHold(v: Boolean) { holdConstant.value = v; runner.hold = v }
-
     // durata (s) della transizione graduale di velocita' e pendenza all'inizio di ogni step
     val rampSec = MutableStateFlow(store.loadRamp())
-    fun setRamp(v: Int) { rampSec.value = v; runner.rampSec = v; store.saveRamp(v) }
+    val rampOn = MutableStateFlow(store.loadRampOn())   // false = i valori cambiano subito, senza transizione
+    private fun applyRamp() { runner.rampSec = if (rampOn.value) rampSec.value else 0 }
+    fun setRamp(v: Int) { rampSec.value = v; store.saveRamp(v); applyRamp() }
+    fun setRampOn(v: Boolean) { rampOn.value = v; store.saveRampOn(v); applyRamp() }
 
     fun setAlertSound(v: Boolean) { alertSound.value = v; store.saveAlertSound(v) }
     fun setAlertVisual(v: Boolean) { alertVisual.value = v; store.saveAlertVisual(v) }
@@ -86,7 +85,7 @@ class TapisViewModel(app: Application) : AndroidViewModel(app) {
         // limiti applicati a ogni comando direttamente nel modulo Bluetooth
         ble.speedLimit = maxSpeed.value
         ble.inclineLimit = maxIncline.value
-        runner.rampSec = rampSec.value
+        applyRamp()
 
         // preavviso sonoro: una sola volta per step, appena mancano `anticipo` secondi alla fine
         viewModelScope.launch {
@@ -287,7 +286,7 @@ class TapisViewModel(app: Application) : AndroidViewModel(app) {
 
     fun startWorkout(id: Long, fromStep: Int = 0) {
         if (runner.progress.value.running || routeRunning.value) return
-        setHold(false)
+
         val w = workouts.value.firstOrNull { it.id == id } ?: return
         if (w.mode == WorkoutMode.ROUTE) {
             startRoute(id)
@@ -446,7 +445,7 @@ class TapisViewModel(app: Application) : AndroidViewModel(app) {
      * posizione corrente: cosi' non viene piu' sovrascritta dal profilo e resta per i giri successivi.
      */
     private fun autoRecordRoutePoint() {
-        if (!routeRunning.value || routePaused.value || holdConstant.value) return
+        if (!routeRunning.value || routePaused.value) return
         val id = activeId.value ?: return
         val w = workouts.value.firstOrNull { it.id == id } ?: return
         if (w.mode != WorkoutMode.ROUTE || !w.video.active) return
@@ -473,7 +472,6 @@ class TapisViewModel(app: Application) : AndroidViewModel(app) {
         if (!routeRunning.value || routePaused.value) return
         val w = workouts.value.firstOrNull { it.id == activeId.value } ?: return
         if (w.mode != WorkoutMode.ROUTE) return
-        if (holdConstant.value) return   // "mantieni costanti": il profilo del video non cambia velocita' e pendenza
         val now = SystemClock.elapsedRealtime()
 
         // Velocita' dal profilo (se i punti la prevedono): al massimo 0,3 km/h ogni 2 s, mai oltre il limite

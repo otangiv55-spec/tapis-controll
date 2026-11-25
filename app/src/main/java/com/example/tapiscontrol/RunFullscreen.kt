@@ -73,7 +73,7 @@ fun RunFullscreen(vm: TapisViewModel, w: Workout, onExit: () -> Unit) {
     val vPos by vm.videoPos.collectAsStateWithLifecycle()
     val seek by vm.videoSeek.collectAsStateWithLifecycle()
     val videoMuted by vm.videoMuted.collectAsStateWithLifecycle()
-    val hold by vm.holdConstant.collectAsStateWithLifecycle()
+    val rampOn by vm.rampOn.collectAsStateWithLifecycle()
     val musicPlaying by vm.music.playing.collectAsStateWithLifecycle()
     val hasMusic by vm.music.playlist.collectAsStateWithLifecycle()
     val vDur by vm.videoDur.collectAsStateWithLifecycle()
@@ -177,13 +177,13 @@ fun RunFullscreen(vm: TapisViewModel, w: Workout, onExit: () -> Unit) {
                     }
                 }
             }
-            if (running) {
-                Text("VARIAZIONI", color = Color.White, fontSize = 13.sp)
+            if (running && !isRoute) {
+                Text("TRANSIZIONE GRADUALE", color = Color.White, fontSize = 13.sp)
                 BigBtn(
-                    if (hold) "🔓 Riattiva" else "🔒 Costanti",
+                    if (rampOn) "Attiva (ON)" else "Spenta (OFF)",
                     Modifier.fillMaxWidth(),
-                    primary = hold,
-                ) { vm.setHold(!hold) }
+                    primary = rampOn,
+                ) { vm.setRampOn(!rampOn) }
             }
             Text("MUSICA / VIDEO", color = Color.White, fontSize = 13.sp)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
