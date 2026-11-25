@@ -44,6 +44,7 @@ fun LocalVideo(
     onDuration: (Double) -> Unit = {},
     onPosition: (Double) -> Unit = {},
     seek: SeekReq = SeekReq(),
+    muted: Boolean = false,
 ) {
     val ctx = LocalContext.current
     val posCb by rememberUpdatedState(onPosition)
@@ -74,6 +75,7 @@ fun LocalVideo(
     }
     LaunchedEffect(exo, rate) { exo.playbackParameters = PlaybackParameters(rate.coerceIn(0.25f, 3f)) }
     LaunchedEffect(exo, playing) { exo.playWhenReady = playing }
+    LaunchedEffect(exo, muted) { exo.volume = if (muted) 0f else 1f }
     val seekId0 = remember(exo) { seek.id }   // le richieste vecchie non si ripetono quando il lettore viene ricreato
     LaunchedEffect(exo, seek.id) {
         if (seek.id != seekId0) exo.seekTo((seek.sec * 1000).toLong().coerceAtLeast(0L))
@@ -124,13 +126,13 @@ private fun youtubeHtml(id: String, start: Int) = """
 </head><body><div id="player"></div>
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-var player, ready = false, wantRate = 1, wantPlaying = false;
+var player, ready = false, wantRate = 1, wantPlaying = false, wantMuted = false;
 function onYouTubeIframeAPIReady() {
   player = new YT.Player('player', {
     width: '100%', height: '100%', videoId: '$id',
     playerVars: { playsinline: 1, rel: 0, controls: 1, start: $start },
     events: {
-      onReady: function() { ready = true; player.setPlaybackRate(wantRate); if (wantPlaying) player.playVideo(); },
+      onReady: function() { ready = true; player.setPlaybackRate(wantRate); if (wantMuted) player.mute(); if (wantPlaying) player.playVideo(); },
       onStateChange: function(e) { if (e.data === 1) player.setPlaybackRate(wantRate); },
       onError: function(e) { Android.error(String(e.data)); }
     }
@@ -142,6 +144,7 @@ setInterval(function() {
     if (player.getDuration) Android.dur(String(player.getDuration()));
   }
 }, 500);
+function setMuted(m) { wantMuted = m; if (ready) { if (m) player.mute(); else player.unMute(); } }
 function seekToSec(s) { if (ready) player.seekTo(s, true); }
 function setRate(r) { wantRate = r; if (ready) player.setPlaybackRate(r); }
 function setPlaying(p) { wantPlaying = p; if (ready) { if (p) player.playVideo(); else player.pauseVideo(); } }
@@ -161,6 +164,7 @@ fun YouTubeVideo(
     onDuration: (Double) -> Unit = {},
     onPosition: (Double) -> Unit = {},
     seek: SeekReq = SeekReq(),
+    muted: Boolean = false,
 ) {
     val ctx = LocalContext.current
     val posCb by rememberUpdatedState(onPosition)
@@ -185,6 +189,7 @@ fun YouTubeVideo(
     DisposableEffect(wv) { onDispose { wv.destroy() } }
     LaunchedEffect(wv, rate, loaded) { if (loaded) wv.evaluateJavascript("setRate($rate)", null) }
     LaunchedEffect(wv, playing, loaded) { if (loaded) wv.evaluateJavascript("setPlaying($playing)", null) }
+    LaunchedEffect(wv, muted, loaded) { if (loaded) wv.evaluateJavascript("setMuted($muted)", null) }
     val seekId0 = remember(wv) { seek.id }
     LaunchedEffect(wv, seek.id, loaded) {
         if (loaded && seek.id != seekId0) wv.evaluateJavascript("seekToSec(${seek.sec})", null)

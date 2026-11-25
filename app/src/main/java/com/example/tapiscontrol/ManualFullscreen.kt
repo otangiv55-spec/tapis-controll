@@ -57,6 +57,7 @@ fun ManualFullscreen(vm: TapisViewModel, mv: VideoRef, onExit: () -> Unit) {
     val connected by vm.ble.connected.collectAsStateWithLifecycle()
     val speedTarget by vm.manualSpeed.collectAsStateWithLifecycle()
     val inclineTarget by vm.manualIncline.collectAsStateWithLifecycle()
+    val videoMuted by vm.videoMuted.collectAsStateWithLifecycle()
     var showControls by rememberSaveable { mutableStateOf(true) }
     var ytError by remember(mv.source) { mutableStateOf<String?>(null) }
 
@@ -87,6 +88,7 @@ fun ManualFullscreen(vm: TapisViewModel, mv: VideoRef, onExit: () -> Unit) {
                     onPosition = { vm.manualVideoPos = it },
                 )
                 VideoType.LOCAL -> LocalVideo(
+                    muted = videoMuted,
                     uri = Uri.parse(mv.source),
                     rate = rate,
                     playing = playing,
@@ -97,6 +99,7 @@ fun ManualFullscreen(vm: TapisViewModel, mv: VideoRef, onExit: () -> Unit) {
                     val id = youtubeId(mv.source)
                     if (id != null) {
                         YouTubeVideo(
+                        muted = videoMuted,
                             videoId = id,
                             rate = youtubeRate(rate),
                             playing = playing,

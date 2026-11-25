@@ -573,6 +573,7 @@ fun RunTab(vm: TapisViewModel) {
             val rate = if (speed >= 0.5) ((speed / ref) * 20).roundToInt() / 20f else 1f
             val vPos by vm.videoPos.collectAsStateWithLifecycle()
             val seek by vm.videoSeek.collectAsStateWithLifecycle()
+            val videoMuted by vm.videoMuted.collectAsStateWithLifecycle()
             val vDur by vm.videoDur.collectAsStateWithLifecycle()
             val steps = remember(w) { w.flatSteps() }
             val hud = buildHud(w, p, live, isRoute, steps, vPos, vDur)
@@ -598,6 +599,7 @@ fun RunTab(vm: TapisViewModel) {
                 when (w.video.type) {
                     VideoType.LOCAL ->
                         LocalVideo(
+                            muted = videoMuted,
                             uri = Uri.parse(w.video.source),
                             rate = rate,
                             playing = playing,
@@ -613,6 +615,7 @@ fun RunTab(vm: TapisViewModel) {
                             Text("Link YouTube non valido")
                         } else {
                             YouTubeVideo(
+                                muted = videoMuted,
                                 videoId = id,
                                 rate = youtubeRate(rate),
                                 playing = playing,
@@ -651,6 +654,8 @@ fun RunTab(vm: TapisViewModel) {
             }
 
             LiveCard(live)
+
+            if (running) HoldSwitch(vm)
 
             if (isRoute) {
                 RouteControls(vm, w, connected)
@@ -723,6 +728,8 @@ fun RunTab(vm: TapisViewModel) {
                     }
                 }
             }
+
+            MusicCard(vm)
 
             if (!isRoute) {
                 StepPicker(

@@ -278,3 +278,15 @@ La compilazione parte da sola nella scheda Actions.
   durata della transizione si sceglie nella scheda In corso tra 6, 10, 15, 20 e 30 s (predefinito 15 s,
   prima era fissa a 6 s). La transizione non supera meta' della durata dello step. La pendenza segue il
   passo del tapis (1 % per volta). La scelta resta salvata e vale anche durante un allenamento in corso.
+
+## Novita' v0.41 - Mantieni costanti e musica
+
+- "Mantieni costanti velocita' e pendenza": interruttore nella scheda In corso (per allenamenti a step e percorsi
+  col video) e pulsante "Costanti" a schermo intero. Sospende le variazioni previste dallo step o dal profilo
+  del video: restano i valori attuali (correggibili a mano), il tempo e gli step scorrono lo stesso. Quando si
+  spegne si torna ai valori dello step con una transizione graduale. Si azzera a ogni nuovo allenamento.
+- Musica: scheda "Musica" (In corso e Manuale) per scegliere uno o piu' file audio del telefono, con
+  play/pausa, brano precedente/successivo, volume e "Svuota"; l'elenco resta salvato. "Apri app musicale" apre
+  l'app musicale predefinita (Spotify, YouTube Music...): l'audio di un'altra app si mescola con l'app.
+- "Silenzia l'audio del video": per sentire solo la musica (video locali e YouTube). A schermo intero un
+  pulsante rapido per musica (play/pausa, brano successivo) e per il silenzio del video.

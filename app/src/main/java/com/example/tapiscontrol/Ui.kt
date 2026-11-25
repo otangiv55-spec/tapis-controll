@@ -189,6 +189,7 @@ fun ManualTab(vm: TapisViewModel) {
     val maxSpeed by vm.maxSpeed.collectAsStateWithLifecycle()
     val maxIncline by vm.maxIncline.collectAsStateWithLifecycle()
     val mv by vm.manualVideo.collectAsStateWithLifecycle()
+    val videoMuted by vm.videoMuted.collectAsStateWithLifecycle()
     val manualDismissed by vm.manualFsDismissed.collectAsStateWithLifecycle()
     val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     var ytError by remember { mutableStateOf<String?>(null) }
@@ -220,6 +221,7 @@ fun ManualTab(vm: TapisViewModel) {
         if (mv.source.isNotEmpty()) {
             when (mv.type) {
                 VideoType.LOCAL -> LocalVideo(
+                    muted = videoMuted,
                     uri = Uri.parse(mv.source),
                     rate = vRate,
                     playing = vPlaying,
@@ -233,6 +235,7 @@ fun ManualTab(vm: TapisViewModel) {
                         Text("Link YouTube non valido")
                     } else {
                         YouTubeVideo(
+                            muted = videoMuted,
                             videoId = id,
                             rate = youtubeRate(vRate),
                             playing = vPlaying,
@@ -265,6 +268,8 @@ fun ManualTab(vm: TapisViewModel) {
             Button(onClick = { vm.manualStart() }, enabled = connected) { Text("Start") }
             OutlinedButton(onClick = { vm.manualStop() }, enabled = connected) { Text("Stop") }
         }
+
+        MusicCard(vm)
 
         Text("Velocità target: ${fmt(speed)} km/h", style = MaterialTheme.typography.titleSmall)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -33,6 +33,15 @@ class TapisViewModel(app: Application) : AndroidViewModel(app) {
     val alertLeadSec = MutableStateFlow(store.loadAlertLead())
     private var alertedStep = -1
 
+    // musica da file del telefono e audio del video
+    val music = MusicController(app, store)
+    val videoMuted = MutableStateFlow(store.loadVideoMuted())
+    fun setVideoMuted(v: Boolean) { videoMuted.value = v; store.saveVideoMuted(v) }
+
+    // "mantieni costanti": sospende le variazioni di velocita' e pendenza previste da allenamento o profilo
+    val holdConstant = MutableStateFlow(false)
+    fun setHold(v: Boolean) { holdConstant.value = v; runner.hold = v }
+
     // durata (s) della transizione graduale di velocita' e pendenza all'inizio di ogni step
     val rampSec = MutableStateFlow(store.loadRamp())
     fun setRamp(v: Int) { rampSec.value = v; runner.rampSec = v; store.saveRamp(v) }
@@ -278,6 +287,7 @@ class TapisViewModel(app: Application) : AndroidViewModel(app) {
 
     fun startWorkout(id: Long, fromStep: Int = 0) {
         if (runner.progress.value.running || routeRunning.value) return
+        setHold(false)
         val w = workouts.value.firstOrNull { it.id == id } ?: return
         if (w.mode == WorkoutMode.ROUTE) {
             startRoute(id)
@@ -436,7 +446,7 @@ class TapisViewModel(app: Application) : AndroidViewModel(app) {
      * posizione corrente: cosi' non viene piu' sovrascritta dal profilo e resta per i giri successivi.
      */
     private fun autoRecordRoutePoint() {
-        if (!routeRunning.value || routePaused.value) return
+        if (!routeRunning.value || routePaused.value || holdConstant.value) return
         val id = activeId.value ?: return
         val w = workouts.value.firstOrNull { it.id == id } ?: return
         if (w.mode != WorkoutMode.ROUTE || !w.video.active) return
@@ -463,6 +473,7 @@ class TapisViewModel(app: Application) : AndroidViewModel(app) {
         if (!routeRunning.value || routePaused.value) return
         val w = workouts.value.firstOrNull { it.id == activeId.value } ?: return
         if (w.mode != WorkoutMode.ROUTE) return
+        if (holdConstant.value) return   // "mantieni costanti": il profilo del video non cambia velocita' e pendenza
         val now = SystemClock.elapsedRealtime()
 
         // Velocita' dal profilo (se i punti la prevedono): al massimo 0,3 km/h ogni 2 s, mai oltre il limite
@@ -532,6 +543,7 @@ class TapisViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     override fun onCleared() {
+        music.release()
         ble.disconnect()
     }
 }

@@ -72,6 +72,10 @@ fun RunFullscreen(vm: TapisViewModel, w: Workout, onExit: () -> Unit) {
     val steps = remember(w) { w.flatSteps() }
     val vPos by vm.videoPos.collectAsStateWithLifecycle()
     val seek by vm.videoSeek.collectAsStateWithLifecycle()
+    val videoMuted by vm.videoMuted.collectAsStateWithLifecycle()
+    val hold by vm.holdConstant.collectAsStateWithLifecycle()
+    val musicPlaying by vm.music.playing.collectAsStateWithLifecycle()
+    val hasMusic by vm.music.playlist.collectAsStateWithLifecycle()
     val vDur by vm.videoDur.collectAsStateWithLifecycle()
     val hud = buildHud(w, p, live, isRoute, steps, vPos, vDur)
     val alertSound by vm.alertSound.collectAsStateWithLifecycle()
@@ -95,6 +99,7 @@ fun RunFullscreen(vm: TapisViewModel, w: Workout, onExit: () -> Unit) {
                     onPosition = { vm.onVideoPosition(it) },
                 )
                 VideoType.LOCAL -> LocalVideo(
+                    muted = videoMuted,
                     uri = Uri.parse(w.video.source),
                     rate = rate,
                     playing = playing,
@@ -107,6 +112,7 @@ fun RunFullscreen(vm: TapisViewModel, w: Workout, onExit: () -> Unit) {
                     val id = youtubeId(w.video.source)
                     if (id != null) {
                         YouTubeVideo(
+                            muted = videoMuted,
                             videoId = id,
                             rate = youtubeRate(rate),
                             playing = playing,
@@ -169,6 +175,24 @@ fun RunFullscreen(vm: TapisViewModel, w: Workout, onExit: () -> Unit) {
                     BigBtn("👁 ${if (alertVisual) "ON" else "OFF"}", Modifier.weight(1f), primary = alertVisual) {
                         vm.setAlertVisual(!alertVisual)
                     }
+                }
+            }
+            if (running) {
+                Text("VARIAZIONI", color = Color.White, fontSize = 13.sp)
+                BigBtn(
+                    if (hold) "🔓 Riattiva" else "🔒 Costanti",
+                    Modifier.fillMaxWidth(),
+                    primary = hold,
+                ) { vm.setHold(!hold) }
+            }
+            Text("MUSICA / VIDEO", color = Color.White, fontSize = 13.sp)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BigBtn(if (musicPlaying) "⏸" else "▶", Modifier.weight(1f), enabled = hasMusic.isNotEmpty()) {
+                    vm.music.toggle()
+                }
+                BigBtn("⏭", Modifier.weight(1f), enabled = hasMusic.isNotEmpty()) { vm.music.next() }
+                BigBtn(if (videoMuted) "🔇" else "🔈", Modifier.weight(1f), primary = videoMuted) {
+                    vm.setVideoMuted(!videoMuted)
                 }
             }
             if (running) {
