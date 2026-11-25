@@ -1,6 +1,8 @@
 package com.example.tapiscontrol
 
 import android.app.Application
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,6 +27,36 @@ class TapisViewModel(app: Application) : AndroidViewModel(app) {
     val maxSpeed = MutableStateFlow(store.loadMaxSpeed())
     val maxIncline = MutableStateFlow(store.loadMaxIncline())
 
+    // Avvisi prima del cambio di step/blocco (suono e fascia visiva, ciascuno disattivabile)
+    val alertSound = MutableStateFlow(store.loadAlertSound())
+    val alertVisual = MutableStateFlow(store.loadAlertVisual())
+    val alertLeadSec = MutableStateFlow(store.loadAlertLead())
+    private var alertedStep = -1
+
+    // durata (s) della transizione graduale di velocita' e pendenza all'inizio di ogni step
+    val rampSec = MutableStateFlow(store.loadRamp())
+    fun setRamp(v: Int) { rampSec.value = v; runner.rampSec = v; store.saveRamp(v) }
+
+    fun setAlertSound(v: Boolean) { alertSound.value = v; store.saveAlertSound(v) }
+    fun setAlertVisual(v: Boolean) { alertVisual.value = v; store.saveAlertVisual(v) }
+    fun setAlertLead(v: Int) { alertLeadSec.value = v; store.saveAlertLead(v) }
+
+    /** Suona un bip per il cambio di step, tre bip per il cambio di blocco (o la fine dell'allenamento). */
+    private fun beep(blockChange: Boolean) {
+        viewModelScope.launch {
+            val tg = try { ToneGenerator(AudioManager.STREAM_MUSIC, 90) } catch (_: Exception) { return@launch }
+            try {
+                repeat(if (blockChange) 3 else 1) {
+                    tg.startTone(ToneGenerator.TONE_PROP_BEEP)
+                    delay(350)
+                }
+                delay(200)
+            } finally {
+                tg.release()
+            }
+        }
+    }
+
     // video della scheda Manuale (indipendente dagli allenamenti)
     // schermo intero in orizzontale: true = l'utente l'ha chiuso (si riattiva ruotando in verticale o col pulsante)
     val fsDismissed = MutableStateFlow(false)
@@ -45,6 +77,19 @@ class TapisViewModel(app: Application) : AndroidViewModel(app) {
         // limiti applicati a ogni comando direttamente nel modulo Bluetooth
         ble.speedLimit = maxSpeed.value
         ble.inclineLimit = maxIncline.value
+        runner.rampSec = rampSec.value
+
+        // preavviso sonoro: una sola volta per step, appena mancano `anticipo` secondi alla fine
+        viewModelScope.launch {
+            runner.progress.collect { p ->
+                if (!p.running) { alertedStep = -1; return@collect }
+                if (!alertSound.value || p.stepIndex == alertedStep) return@collect
+                val w = workouts.value.firstOrNull { it.id == activeId.value } ?: return@collect
+                val a = stepAlertFor(w, w.flatSteps(), p, alertLeadSec.value) ?: return@collect
+                alertedStep = p.stepIndex
+                beep(a.blockChange)
+            }
+        }
 
         // Se si lascia la scheda "In corso" il lettore video viene chiuso: il video "scorre" comunque in modo
         // virtuale alla velocita' reale del tapis roulant, cosi' il profilo del percorso resta allineato e

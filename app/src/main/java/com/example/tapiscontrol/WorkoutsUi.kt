@@ -574,7 +574,13 @@ fun RunTab(vm: TapisViewModel) {
             val vPos by vm.videoPos.collectAsStateWithLifecycle()
             val seek by vm.videoSeek.collectAsStateWithLifecycle()
             val vDur by vm.videoDur.collectAsStateWithLifecycle()
-            val hud = buildHud(w, p, live, isRoute, remember(w) { w.flatSteps() }, vPos, vDur)
+            val steps = remember(w) { w.flatSteps() }
+            val hud = buildHud(w, p, live, isRoute, steps, vPos, vDur)
+            val alertVisual by vm.alertVisual.collectAsStateWithLifecycle()
+            val alertLead by vm.alertLeadSec.collectAsStateWithLifecycle()
+            if (!isRoute && alertVisual) {
+                stepAlertFor(w, steps, p, alertLead)?.let { StepAlertBanner(it, Modifier.fillMaxWidth()) }
+            }
 
             if (w.video.type == VideoType.ANIMATION) {
                 AnimatedRoute(
@@ -681,6 +687,8 @@ fun RunTab(vm: TapisViewModel) {
                                 OutlinedButton(onClick = { vm.runner.stop() }) { Text("Stop") }
                             }
                         }
+                        RampSettings(vm)
+                        AlertSettings(vm)
                         if (p.running) {
                             fun signed(d: Double): String {
                                 val r = Math.round(d * 10) / 10.0

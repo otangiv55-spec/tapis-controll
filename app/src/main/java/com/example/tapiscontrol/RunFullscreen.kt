@@ -74,6 +74,10 @@ fun RunFullscreen(vm: TapisViewModel, w: Workout, onExit: () -> Unit) {
     val seek by vm.videoSeek.collectAsStateWithLifecycle()
     val vDur by vm.videoDur.collectAsStateWithLifecycle()
     val hud = buildHud(w, p, live, isRoute, steps, vPos, vDur)
+    val alertSound by vm.alertSound.collectAsStateWithLifecycle()
+    val alertVisual by vm.alertVisual.collectAsStateWithLifecycle()
+    val alertLead by vm.alertLeadSec.collectAsStateWithLifecycle()
+    val stepAlert = if (!isRoute && alertVisual) stepAlertFor(w, steps, p, alertLead) else null
     val message = if (isRoute) routeMsg else p.message
 
     Box(Modifier.fillMaxSize().background(Color.Black)) {
@@ -121,6 +125,10 @@ fun RunFullscreen(vm: TapisViewModel, w: Workout, onExit: () -> Unit) {
 
         RunHud(hud, Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.displayCutout), scale = 0.95f, showDistance = true)
 
+        stepAlert?.let {
+            StepAlertBanner(it, Modifier.align(Alignment.TopCenter).padding(top = 12.dp).fillMaxWidth(0.5f))
+        }
+
         val note = ytError?.let { "YouTube ha rifiutato il video (codice $it)" } ?: message
         if (note.isNotEmpty()) {
             Box(
@@ -149,6 +157,17 @@ fun RunFullscreen(vm: TapisViewModel, w: Workout, onExit: () -> Unit) {
                     }
                     BigBtn("${(p.stepIndex + 2).coerceAtMost(p.stepCount)} ⏭", Modifier.weight(1f)) {
                         vm.selectStep((p.stepIndex + 1).coerceAtMost(p.stepCount - 1))
+                    }
+                }
+            }
+            if (running && !isRoute) {
+                Text("AVVISO CAMBIO STEP", color = Color.White, fontSize = 13.sp)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    BigBtn("🔔 ${if (alertSound) "ON" else "OFF"}", Modifier.weight(1f), primary = alertSound) {
+                        vm.setAlertSound(!alertSound)
+                    }
+                    BigBtn("👁 ${if (alertVisual) "ON" else "OFF"}", Modifier.weight(1f), primary = alertVisual) {
+                        vm.setAlertVisual(!alertVisual)
                     }
                 }
             }

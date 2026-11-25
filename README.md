@@ -256,3 +256,25 @@ La compilazione parte da sola nella scheda Actions.
   Esempio: mancano 40 s alla fine dello step e premi "successivo" -> il video avanza di 40 s.
 - Il nome dello step in corso (il nome del blocco) compare insieme al tempo residuo: nella scheda In corso
   ("Intervalli · Step 3/12 · restano 0:45") e a schermo intero.
+
+## Novita' v0.38 - Avviso prima del cambio di step o blocco
+
+- Prima della fine di ogni step l'app avvisa del cambio in arrivo, con due avvisi indipendenti:
+  - suono: 1 bip per il passaggio a uno step dello stesso blocco, 3 bip per un nuovo blocco o per la fine
+    dell'allenamento (volume multimediale del telefono);
+  - visivo: fascia lampeggiante con il conto alla rovescia e i valori del prossimo step
+    (arancione = nuovo step, viola = nuovo blocco o fine).
+- Interruttori "Suono" e "Visivo" e anticipo (5, 10, 15 o 20 s) nella scheda In corso; a schermo intero
+  due pulsanti rapidi (campanella e occhio). Le scelte restano salvate.
+- Per step brevi l'anticipo si riduce a meta' della durata dello step.
+
+## Novita' v0.39 - Preavviso piu' breve
+
+- L'anticipo dell'avviso si sceglie tra 3 e 5 secondi (predefinito 5 s); i valori salvati piu' lunghi tornano a 5 s.
+
+## Novita' v0.40 - Transizioni graduali tra gli step
+
+- Velocita' e pendenza cambiano gradualmente all'inizio di ogni step (e quindi anche tra i blocchi): la
+  durata della transizione si sceglie nella scheda In corso tra 6, 10, 15, 20 e 30 s (predefinito 15 s,
+  prima era fissa a 6 s). La transizione non supera meta' della durata dello step. La pendenza segue il
+  passo del tapis (1 % per volta). La scelta resta salvata e vale anche durante un allenamento in corso.

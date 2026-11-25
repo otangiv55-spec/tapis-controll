@@ -225,6 +225,16 @@ class WorkoutStore(ctx: Context) {
     fun saveManualVideo(v: VideoRef) = prefs.edit()
         .putString("mvt", v.type.name).putString("mvs", v.source).putFloat("mvr", v.refSpeedKmh.toFloat()).apply()
 
+    fun loadRamp(): Int = prefs.getInt("ramp", 15)
+    fun saveRamp(v: Int) = prefs.edit().putInt("ramp", v).apply()
+
+    fun loadAlertSound(): Boolean = prefs.getBoolean("alsound", true)
+    fun saveAlertSound(v: Boolean) = prefs.edit().putBoolean("alsound", v).apply()
+    fun loadAlertVisual(): Boolean = prefs.getBoolean("alvisual", true)
+    fun saveAlertVisual(v: Boolean) = prefs.edit().putBoolean("alvisual", v).apply()
+    fun loadAlertLead(): Int = prefs.getInt("allead", 5).let { if (it == 3 || it == 5) it else 5 }
+    fun saveAlertLead(v: Int) = prefs.edit().putInt("allead", v).apply()
+
     fun loadMaxIncline(): Double = prefs.getFloat("maxinc", 8f).toDouble()
     fun saveMaxIncline(v: Double) = prefs.edit().putFloat("maxinc", v.toFloat()).apply()
 
@@ -264,7 +274,7 @@ class WorkoutRunner(private val ble: TreadmillBle, private val scope: CoroutineS
     val progress = MutableStateFlow(Progress())
 
     /** Durata (s) della rampa all'inizio di ogni step (tranne il primo). */
-    var rampSec = 6
+    @Volatile var rampSec = 15
 
     private var job: Job? = null
     @Volatile private var paused = false
@@ -419,8 +429,10 @@ class WorkoutRunner(private val ble: TreadmillBle, private val scope: CoroutineS
                     if (jumpTarget != null) continue   // salto richiesto durante la pausa
                 }
 
+                // la rampa non supera meta' della durata dello step, cosi' lo step resta in parte a regime
+                val ramp = min(rampSec, max(1, step.durationSec / 2))
                 val f = if (firstStep || rampSec <= 0) 1.0
-                else ((t + 1).toDouble() / rampSec).coerceAtMost(1.0)
+                else ((t + 1).toDouble() / ramp).coerceAtMost(1.0)
                 val sp = round1(prevSpeed + (tgtSpeed - prevSpeed) * f)
                 val inc = roundHalf(prevInc + (tgtInc - prevInc) * f)
 
