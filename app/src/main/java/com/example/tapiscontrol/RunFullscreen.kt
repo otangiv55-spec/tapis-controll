@@ -94,6 +94,8 @@ fun RunFullscreen(vm: TapisViewModel, w: Workout, onExit: () -> Unit) {
                     refSpeedKmh = ref,
                     startSec = vm.videoPosSec,
                     caption = "",
+                    theme = w.video.scene,
+                    light = w.video.light,
                     modifier = Modifier.fillMaxSize(),
                     overlay = false,
                     onPosition = { vm.onVideoPosition(it) },

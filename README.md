@@ -292,3 +292,12 @@ La compilazione parte da sola nella scheda Actions.
 - Interruttore "Transizione graduale tra gli step" nella scheda In corso e pulsante a schermo intero: spenta,
   a ogni cambio di step velocita' e pendenza passano subito ai nuovi valori; accesa, cambiano un po' alla
   volta (durata 6-30 s, predefinita 15 s). Funziona anche durante l'allenamento e resta salvata.
+
+## Novita' v0.43 - Animazione piu' ricca: ambienti e ora del giorno
+
+- L'animazione ha 4 ambienti: Collina e prati, Montagna (cime con neve, abeti, rocce), Bosco (alberi alti, chiome,
+  raggi di luce) e Lago e mare (acqua con riflessi, barche a vela, lampioni sul lungolago).
+- 3 ore del giorno: Giorno, Tramonto (sole basso, cielo caldo) e Sera (luna, stelle, lampioni accesi).
+- Alberi con ombreggiatura, bordi leggermente scuriti, cielo e colori diversi per ora e ambiente.
+- Ambiente e ora si scelgono per ogni allenamento (scheda Video, tipo Animazione) e per il Manuale. Gli
+  allenamenti esistenti restano su "Collina e prati" di giorno.

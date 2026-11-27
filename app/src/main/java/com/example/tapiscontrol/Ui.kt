@@ -213,6 +213,8 @@ fun ManualTab(vm: TapisViewModel) {
                 refSpeedKmh = mv.refSpeedKmh,
                 startSec = vm.manualVideoPos,
                 caption = "",
+                theme = mv.scene,
+                light = mv.light,
                 modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
                 onPosition = { vm.manualVideoPos = it },
             )

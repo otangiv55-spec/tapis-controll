@@ -354,6 +354,35 @@ fun VideoCard(video: VideoRef, key: Any, onChange: (VideoRef) -> Unit) {
                 VideoType.ANIMATION -> {
                     Text("Percorso animato: scorre alla velocità reale del tapis roulant e si inclina con la " +
                         "pendenza, quindi segue l'allenamento e non finisce mai.")
+                    Text("Ambiente", style = MaterialTheme.typography.titleSmall)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(SceneTheme.COLLINA, SceneTheme.MONTAGNA).forEach { th ->
+                            if (video.scene == th) {
+                                Button(onClick = {}) { Text(th.label) }
+                            } else {
+                                OutlinedButton(onClick = { onChange(video.copy(scene = th)) }) { Text(th.label) }
+                            }
+                        }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(SceneTheme.BOSCO, SceneTheme.ACQUA).forEach { th ->
+                            if (video.scene == th) {
+                                Button(onClick = {}) { Text(th.label) }
+                            } else {
+                                OutlinedButton(onClick = { onChange(video.copy(scene = th)) }) { Text(th.label) }
+                            }
+                        }
+                    }
+                    Text("Ora del giorno", style = MaterialTheme.typography.titleSmall)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        TimeOfDay.values().forEach { tm ->
+                            if (video.light == tm) {
+                                Button(onClick = {}) { Text(tm.label) }
+                            } else {
+                                OutlinedButton(onClick = { onChange(video.copy(light = tm)) }) { Text(tm.label) }
+                            }
+                        }
+                    }
                 }
                 VideoType.LOCAL -> {
                     OutlinedButton(onClick = { picker.launch(arrayOf("video/*")) }) { Text("Scegli file video") }
@@ -591,6 +620,8 @@ fun RunTab(vm: TapisViewModel) {
                     refSpeedKmh = ref,
                     startSec = vm.videoPosSec,
                     caption = "",
+                    theme = w.video.scene,
+                    light = w.video.light,
                     modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
                     hud = hud,
                     onPosition = { vm.onVideoPosition(it) },

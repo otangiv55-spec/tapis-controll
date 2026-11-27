@@ -38,6 +38,17 @@ fun roundIncline(x: Double): Double = (x / INCLINE_STEP).roundToInt() * INCLINE_
 
 enum class VideoType { NONE, LOCAL, YOUTUBE, ANIMATION }
 
+/** Ambiente dell'animazione. */
+enum class SceneTheme(val label: String) {
+    COLLINA("Collina e prati"), MONTAGNA("Montagna"), BOSCO("Bosco"), ACQUA("Lago e mare")
+}
+
+/** Ora del giorno dell'animazione. */
+enum class TimeOfDay(val label: String) { GIORNO("Giorno"), TRAMONTO("Tramonto"), SERA("Sera") }
+
+private inline fun <reified T : Enum<T>> enumOr(name: String?, default: T): T =
+    try { enumValueOf<T>(name ?: "") } catch (_: Exception) { default }
+
 /** STEPS = allenamento a intervalli; ROUTE = percorso virtuale (pendenza guidata dal video, velocita' libera). */
 enum class WorkoutMode { STEPS, ROUTE }
 
@@ -80,6 +91,8 @@ data class VideoRef(
     val type: VideoType = VideoType.NONE,
     val source: String = "",
     val refSpeedKmh: Double = 5.0,
+    val scene: SceneTheme = SceneTheme.COLLINA,   // solo per l'animazione
+    val light: TimeOfDay = TimeOfDay.GIORNO,
 )
 
 /** C'e' un "video" da mostrare: un file/link oppure l'animazione (che non ha sorgente). */
@@ -143,6 +156,8 @@ class WorkoutStore(ctx: Context) {
         .put("vt", w.video.type.name)
         .put("vs", w.video.source)
         .put("vr", w.video.refSpeedKmh)
+        .put("sc", w.video.scene.name)
+        .put("tm", w.video.light.name)
         .put("m", w.mode.name)
         .put("rt", JSONArray().also { a ->
             w.route.forEach { pt ->
@@ -162,6 +177,8 @@ class WorkoutStore(ctx: Context) {
                 type = VideoType.valueOf(o.optString("vt", "NONE")),
                 source = o.optString("vs", ""),
                 refSpeedKmh = o.optDouble("vr", 5.0),
+                scene = enumOr(o.optString("sc", ""), SceneTheme.COLLINA),
+                light = enumOr(o.optString("tm", ""), TimeOfDay.GIORNO),
             ),
             mode = try {
                 WorkoutMode.valueOf(o.optString("m", "STEPS"))
@@ -220,10 +237,13 @@ class WorkoutStore(ctx: Context) {
         type = try { VideoType.valueOf(prefs.getString("mvt", "NONE") ?: "NONE") } catch (_: Exception) { VideoType.NONE },
         source = prefs.getString("mvs", "") ?: "",
         refSpeedKmh = prefs.getFloat("mvr", 5f).toDouble(),
+        scene = enumOr(prefs.getString("mvsc", ""), SceneTheme.COLLINA),
+        light = enumOr(prefs.getString("mvtm", ""), TimeOfDay.GIORNO),
     )
 
     fun saveManualVideo(v: VideoRef) = prefs.edit()
-        .putString("mvt", v.type.name).putString("mvs", v.source).putFloat("mvr", v.refSpeedKmh.toFloat()).apply()
+        .putString("mvt", v.type.name).putString("mvs", v.source).putFloat("mvr", v.refSpeedKmh.toFloat())
+        .putString("mvsc", v.scene.name).putString("mvtm", v.light.name).apply()
 
     fun loadMusic(): List<String> =
         (prefs.getString("music", "") ?: "").split("\n").filter { it.isNotBlank() }

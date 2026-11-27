@@ -83,6 +83,8 @@ fun ManualFullscreen(vm: TapisViewModel, mv: VideoRef, onExit: () -> Unit) {
                     refSpeedKmh = mv.refSpeedKmh,
                     startSec = vm.manualVideoPos,
                     caption = "",
+                    theme = mv.scene,
+                    light = mv.light,
                     modifier = Modifier.fillMaxSize(),
                     overlay = false,
                     onPosition = { vm.manualVideoPos = it },
