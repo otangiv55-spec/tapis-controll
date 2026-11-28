@@ -29,9 +29,8 @@ fun ImmersiveAnimation(
     theme: String = "Collina"
 ) {
     var totalDistance by remember { mutableStateOf(0f) }
-    val panX = remember { Animatable(0f) }
-    val zoom = remember { Animatable(1.2f) }
-    val tiltY = remember { Animatable(0f) }
+    val scrollX = remember { Animatable(0f) }
+    val zoom = remember { Animatable(1.25f) }
     val context = LocalContext.current
     
     val baseDrawableName = remember(theme, incline) {
@@ -58,67 +57,76 @@ fun ImmersiveAnimation(
         context.resources.getIdentifier(baseDrawableName, "drawable", context.packageName)
     }
     
+    // VELOCITA MOLTO EVIDENTE: scroll continuo la cui velocita e' direttamente speedKmh
     LaunchedEffect(isRunning, speedKmh) {
         if (isRunning && speedKmh > 0.1f) {
-            val speedFactor = (speedKmh / 5f).coerceIn(0.2f, 3f)
-            var direction = 1f
             while (isActive && isRunning) {
-                totalDistance += speedFactor * 0.6f
+                // Velocita scroll proporzionale a speedKmh - molto evidente
+                // A 3 km/h scorre piano, a 12 km/h scorre 4 volte piu veloce
+                val speedFactor = speedKmh * 0.8f
+                val duration = (1200 / speedFactor.coerceAtLeast(0.5f)).toInt().coerceIn(200, 3000)
                 
-                // Pan avanti e indietro come camminata reale nello stesso posto
-                val targetPan = direction * 80f
-                panX.animateTo(
-                    targetPan,
-                    tween((3000 / speedFactor).toInt(), easing = LinearEasing)
+                scrollX.animateTo(
+                    targetValue = scrollX.value + 100f,
+                    animationSpec = tween(duration, easing = LinearEasing)
                 )
-                direction *= -1f
+                totalDistance += speedFactor
+                if (scrollX.value > 500f) scrollX.snapTo(0f)
                 
-                val targetZoom = 1.25f + (incline / 200f)
+                // Zoom cambia con pendenza
                 zoom.animateTo(
-                    targetZoom,
-                    tween((2500 / speedFactor).toInt(), easing = LinearEasing)
-                )
-                
-                val targetTilt = -incline * 1.5f
-                tiltY.animateTo(
-                    targetTilt,
-                    tween((2000 / speedFactor).toInt(), easing = LinearEasing)
+                    1.25f + (incline / 150f),
+                    tween(800, easing = LinearEasing)
                 )
             }
         } else {
-            panX.stop()
+            scrollX.stop()
             zoom.stop()
-            tiltY.stop()
         }
     }
     
     Box(Modifier.fillMaxSize().background(Color.Black)) {
         if (resId != 0) {
-            Image(
-                painter = painterResource(id = resId),
-                contentDescription = null,
-                modifier = Modifier
+            // Effetto scroll infinito - sembra video POV che avanza
+            Box(
+                Modifier
                     .fillMaxSize()
                     .graphicsLayer {
                         scaleX = zoom.value
                         scaleY = zoom.value
-                        translationX = panX.value
-                        translationY = tiltY.value
-                    },
-                contentScale = ContentScale.Crop
-            )
+                    }
+            ) {
+                // Due copie per loop continuo
+                Image(
+                    painter = painterResource(id = resId),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer { translationX = -scrollX.value },
+                    contentScale = ContentScale.Crop
+                )
+                Image(
+                    painter = painterResource(id = resId),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer { translationX = -scrollX.value + 600f },
+                    contentScale = ContentScale.Crop
+                )
+            }
         }
         
         if (!isRunning) {
-            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f)))
+            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f)))
             Column(Modifier.fillMaxSize().padding(16.dp)) {
-                Text("PAUSA - $baseDrawableName", color = Color.White)
-                Text("Distanza: ${totalDistance.toInt()}m - stesso panorama che continua", color = Color.White.copy(0.9f))
+                Text("PAUSA", color = Color.White)
+                Text("Velocita tapis: ${speedKmh}km/h - Distanza: ${totalDistance.toInt()}m", color = Color.White)
+                Text("Scroll fermo - mantiene posizione", color = Color.White.copy(0.7f))
             }
         } else {
             Column(Modifier.fillMaxSize().padding(12.dp)) {
                 Text("$theme | ${speedKmh}km/h | ${incline}% | ${totalDistance.toInt()}m", color = Color.White)
-                Text("Endless: $baseDrawableName", color = Color.White.copy(0.7f))
+                Text("Velocita scroll: ${"%.1f".format(speedKmh * 0.8f)} - stesso panorama endless", color = Color.White.copy(0.7f))
             }
         }
     }
