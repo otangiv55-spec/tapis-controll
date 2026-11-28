@@ -40,21 +40,7 @@ enum class VideoType { NONE, LOCAL, YOUTUBE, ANIMATION }
 
 /** Ambiente dell'animazione. */
 enum class SceneTheme(val label: String) {
-    COLLINA("Collina e prati"), 
-    MONTAGNA("Montagna"), 
-    BOSCO("Bosco"), 
-    ACQUA("Lago e mare"),
-    // NUOVI PAESAGGI IMMERSIVI v0.44.3
-    COLLINA_FIORI("Collina fiori e farfalle"),
-    BOSCO_NEBBIA("Bosco nebbia e raggi"),
-    VIGNETI("Vigneti Toscana tramonto"),
-    AUTUNNO("Foresta autunnale rossa"),
-    DESERTO("Deserto cactus tramonto drammatico"),
-    CASCATE("Cascate giungla tropicale"),
-    SPIAGGIA("Spiaggia tropicale palme"),
-    LAVANDA("Lavanda Provenza"),
-    LAGO_STELLATO("Lago stellato Via Lattea"),
-    MONTAGNA_DRAMMATICA("Montagna neve e croce vetta")
+    COLLINA("Collina e prati"), MONTAGNA("Montagna"), BOSCO("Bosco"), ACQUA("Lago e mare")
 }
 
 /** Ora del giorno dell'animazione. */

@@ -18,25 +18,47 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.atan
+import kotlin.random.Random
 
-// Mappatura SceneTheme -> drawable (vecchi e nuovi)
-fun SceneTheme.toDrawableRes(time: TimeOfDay = TimeOfDay.GIORNO): Int {
+// Mappa i 4 temi vecchi ai nuovi paesaggi immersivi con rotazione
+fun SceneTheme.toImmersiveRes(): Int {
     return when(this) {
-        SceneTheme.COLLINA -> R.drawable.bg_collina_0_giorno
-        SceneTheme.COLLINA_FIORI -> R.drawable.bg_collina_0_giorno
-        SceneTheme.VIGNETI -> R.drawable.bg_vigneti_toscana
-        SceneTheme.LAVANDA -> R.drawable.bg_lavanda_provenza
-        SceneTheme.BOSCO -> R.drawable.bg_bosco_3_giorno
-        SceneTheme.BOSCO_NEBBIA -> R.drawable.bg_bosco_3_giorno
-        SceneTheme.AUTUNNO -> R.drawable.bg_autunno_rosse
-        SceneTheme.MONTAGNA -> R.drawable.bg_montagna_9_giorno
-        SceneTheme.MONTAGNA_DRAMMATICA -> R.drawable.bg_montagna_9_drammatica
-        SceneTheme.ACQUA -> R.drawable.bg_lago_6_giorno
-        SceneTheme.LAGO_STELLATO -> R.drawable.bg_lago_sera_stellato
-        SceneTheme.SPIAGGIA -> R.drawable.bg_spiaggia_tropicale
-        SceneTheme.CASCATE -> R.drawable.bg_cascate_giungla
-        SceneTheme.DESERTO -> R.drawable.bg_deserto_tramonto
+        SceneTheme.COLLINA -> listOf(
+            R.drawable.bg_collina_0_giorno,
+            R.drawable.bg_vigneti_toscana,
+            R.drawable.bg_lavanda_provenza,
+            R.drawable.bg_collina_tramonto_gold
+        ).random()
+        SceneTheme.BOSCO -> listOf(
+            R.drawable.bg_bosco_3_giorno,
+            R.drawable.bg_autunno_rosse,
+            R.drawable.bg_bosco_3_tramonto
+        ).random()
+        SceneTheme.ACQUA -> listOf(
+            R.drawable.bg_lago_6_giorno,
+            R.drawable.bg_lago_sera_stellato,
+            R.drawable.bg_spiaggia_tropicale,
+            R.drawable.bg_cascate_giungla
+        ).random()
+        SceneTheme.MONTAGNA -> listOf(
+            R.drawable.bg_montagna_9_giorno,
+            R.drawable.bg_montagna_9_drammatica,
+            R.drawable.bg_montagna_12_estremo,
+            R.drawable.bg_deserto_tramonto
+        ).random()
     }
+}
+
+// Funzione stabile per evitare che cambi ad ogni recomposition: sceglie in base all'id allenamento
+fun SceneTheme.toStableRes(seed: Long = 0): Int {
+    val list = when(this) {
+        SceneTheme.COLLINA -> listOf(R.drawable.bg_collina_0_giorno, R.drawable.bg_vigneti_toscana, R.drawable.bg_lavanda_provenza, R.drawable.bg_collina_tramonto_gold)
+        SceneTheme.BOSCO -> listOf(R.drawable.bg_bosco_3_giorno, R.drawable.bg_autunno_rosse, R.drawable.bg_bosco_3_tramonto)
+        SceneTheme.ACQUA -> listOf(R.drawable.bg_lago_6_giorno, R.drawable.bg_lago_sera_stellato, R.drawable.bg_spiaggia_tropicale, R.drawable.bg_cascate_giungla)
+        SceneTheme.MONTAGNA -> listOf(R.drawable.bg_montagna_9_giorno, R.drawable.bg_montagna_9_drammatica, R.drawable.bg_montagna_12_estremo, R.drawable.bg_deserto_tramonto)
+    }
+    val idx = (seed % list.size).toInt().let { if(it<0) 0 else it }
+    return list[idx]
 }
 
 @Composable
@@ -46,10 +68,10 @@ fun ImmersiveAnimationView(
     currentInclinePct: Float,
     currentSegmentName: String = "",
     isPlaying: Boolean = true,
+    workoutId: Long = 0,
     modifier: Modifier = Modifier
 ) {
-    val time = video.light
-    val resId = remember(video.scene, time) { video.scene.toDrawableRes(time) }
+    val resId = remember(video.scene, workoutId) { video.scene.toStableRes(workoutId) }
     val referenceSpeed = 10f
     val scrollFactor = (currentSpeedKmh / referenceSpeed).coerceIn(0f, 2.5f)
     val infiniteTransition = rememberInfiniteTransition(label="immersive")
@@ -78,7 +100,7 @@ fun ImmersiveAnimationView(
     }
 }
 
-// Alias per compatibilità: se il vecchio codice chiamava AnimationView, ora punta al nuovo
+// Alias per compatibilità con qualsiasi nome vecchio
 @Composable
 fun AnimationView(video: VideoRef, speed: Float, incline: Float, modifier: Modifier = Modifier) {
     ImmersiveAnimationView(video, speed, incline, modifier=modifier)
